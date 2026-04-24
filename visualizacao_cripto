@@ -1,1 +1,35 @@
+from bs4 import BeautifulSoup
+import requests
+import re
 
+requisicao=requests.get('https://coinmarketcap.com/')
+site=BeautifulSoup(requisicao.text,'html.parser')
+
+tabelas=site.find('tbody')
+# print(tabelas.prettify())
+
+linhas=tabelas.find_all('tr')
+# print(linhas[0].prettify())
+
+for linha in linhas:
+    try:
+        moeda=linha.find(class_='eWrlhi').text
+        prefixo=linha.find(class_='gOVMPU').text
+        preco=linha.find(class_='ilZTOW').text
+        percentuais=linha.find_all(string=re.compile('%'))
+        
+        valor_de_mercado=linha.find(class_='jfwGHx').text.replace(',','.')
+                
+        for i,percentual in enumerate(percentuais):
+            if 'dJLZma' in percentual.parent['class']:
+                percentuais[i]="-"+(percentual)
+
+        var_1h=percentuais[0]
+        var_24h=percentuais[1]
+        var_7d=percentuais[2]
+
+        print(f"{moeda} ({prefixo}) {preco} | var 1h: {percentuais[0]} | var 24h: {percentuais[1] }"
+            f"| var 7d: {percentuais[2]} | market cap: {valor_de_mercado}\n")
+              
+    except AttributeError:
+        continue
